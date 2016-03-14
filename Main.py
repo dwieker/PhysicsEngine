@@ -4,71 +4,44 @@ from WorldObjects import *
 from helperMath import *
 
 
+max_X,max_Y = 700, 700
+
 def close(pt):
-    win.close()
-    
-win =  GraphWin("test",800,800)
-win.setCoords(0,0,500,500)
+    win.close()    
+win =  GraphWin("test",800,700)
+win.setCoords(0,0,max_X, max_Y)
 win.setMouseHandler(close)
 dt = .1
+w = World(win, dt)
 
-objs = []
-for i in range(2):
-    pos = np.random.random(2) * 480
-    v = np.random.random(2) * 80
-    o = Ball(pos, 20)
-    o.v = v
-    objs.append(o)
 
-o = Ball(vect(305, 150), 10)
-o.v = vect(0,-20)
-objs.append(o)
+# add some balls
+w.objects.append( Ball(vect(100, 500), r=20., v=vect(50,4)) )
+w.objects.append( Ball(vect(150, 500), r=40., v=vect(-50,0)) )
+w.objects.append( Ball(vect(100, 600), r=20., v=vect(50,8)) )
+w.objects.append( Ball(vect(300, 700), r=50., v=vect(5,0)) )
 
-pts = np.array([[100,100],[200,100],[200,125],[100,125]])
+#Add a polygon
+pts = np.array([[100,100],[200,100],[200,165],[100,125]])
 p = RigidPolygon(pts, density = .01)
-p.w = 0
-p.v = vect(-10,0)
-"""
-o = Ball(vect(300,250), 10, v=vect(0,100))
-o1 = Ball(vect(200,250), 10, v=vect(0,-100))
-o2 = Ball(vect(250,300), 10, v=vect(-100,0))
-o3 = Ball(vect(250,200), 10, v=vect(100,0))
-objs.append(o)
-objs.append(o1)
-objs.append(o2)
-objs.append(o3)
-"""
-#objs.append(p)
+p.w = .1
+p.v = vect(-0,5)
+w.objects.append(p)
 
-wall1 = Wall(vect(0,0), vect(200,500))
-wall2 = Wall(vect(0,0), vect(0,500))
-wall3 = Wall(vect(0,0), vect(500,0))
-wall4 = Wall(vect(500,0), vect(500,500))
-wall5 = Wall(vect(0,500), vect(500,500))
+# create the walls
+for coords in [((0,0), (max_X,0)), ((0,0), (0,max_Y)), 
+			   ((0,max_Y), (max_X,max_X)), ((max_X,max_Y), (max_X,0))]:
+	w.objects.append( Wall(coords[0],coords[1])    )
 
-b_hole = BlackHole(vect(260,250), 20)
-objs.append(wall1)
-objs.append(wall2)
-objs.append(wall3)
-objs.append(wall4)
-objs.append(wall5)
-bomb1 = Bomb(vect(280,250), strength = 200000)
-bomb2 = Bomb(vect(380,250), strength = 200000)
-bomb3 = Bomb(vect(180,250), strength = 200000)
-bomb4 = Bomb(vect(480,250), strength = 200000)
+w.objects.append( BlackHole(vect(400, 400), 30))
 
-#objs.append(bomb1)
-#objs.append(bomb2)
-#objs.append(bomb3)
-#objs.append(bomb4)
 
-objs.append(b_hole)
-w = World(win, objs, dt)
+
 w.gravity = 0
 w.damping = 1
-w.draw()
 
 ##########
+w.draw()
 while not win.closed:
     w.update()
     time.sleep(.02)

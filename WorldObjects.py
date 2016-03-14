@@ -162,12 +162,12 @@ class BlackHole():
         self.cir.draw(win)   
 ############################################################################################### 
 class World():
-    def __init__(self, win, objects, dt):
+    def __init__(self, win, dt, objects=[]):
         self.objects = objects
         self.win = win
         self.dt = dt
-        self.gravity = 0
-        self.damping = 1 #efficienty of bounces
+        self.gravity = 0.
+        self.damping = 1. #efficienty of bounces
     
     def handle_interactions(self):
         i = 0
@@ -261,6 +261,7 @@ def handle_polygon(polygon, objects, world):
             handle_pw(polygon, object, world)
         elif object.__class__.__name__=="BlackHole":
             pass
+            
 
   
 
@@ -297,13 +298,15 @@ def handle_bb(ball, object, world):
         ball.v = ball_v
     
 def handle_bw(ball, wall, world):
+    """ Given a ball and a wall, solve and set their final velocities after collision"""
     dt = world.dt
     next_b_pos = ball.pos + ball.v * dt
     if wall.distance_to(next_b_pos) <= ball.r and wall.distance_to(next_b_pos) < wall.distance_to(ball.pos):
         v_n = ball.v.dot(wall.n) * wall.n
         v_t = ball.v.dot(wall.t) * wall.t
         ball.v = -v_n + v_t
-        
+        ball.v *= world.damping
+
 def handle_pw(polygon, wall, world):
     dt = world.dt
     #check if line intersects bounding box by plugging opposite corner poitns into line equation. signs should be opposite
@@ -349,7 +352,7 @@ def handle_pb(polygon, ball, world):
 
 
     #For each face of polygon, generate a line and check ball's distance to that face. If less than radius, there is overalap
-    pts = np.vstack((p.points(), p.points()[0])) #end of list must be the same point as begining of list
+    pts = np.vstack((polygon.points(), polygon.points()[0])) #end of list must be the same point as begining of list
     for i in range(polygon.size):
         line = pts_to_line(pts[i], pts[i + 1])
         t = norm(vect(pts[i+1,0] - pts[i,0], pts[i+1,1] - pts[i,1])) #vect parallel to line
@@ -372,7 +375,6 @@ def handle_pb(polygon, ball, world):
                 x = pts[i+1,0]
                 y = pts[i+1,1]
              
-            
             else: continue
                 
             r = vect(x,y) - polygon.m_center
@@ -382,7 +384,7 @@ def handle_pb(polygon, ball, world):
             
             j = -(1+world.damping)*(V_a - V_b).dot(n) / ((1./polygon.mass) + (1./ball.mass) + (np.cross(r,n)**2 / polygon.I))      
             polygon.apply_impulse(vect(x,y), j*n)
-            ball.apply_impulse(-j*n)
+            ball.apply_impulse(-j*n, world.dt)
             return
     
                      
